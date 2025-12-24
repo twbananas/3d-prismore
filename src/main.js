@@ -181,8 +181,7 @@ class SelectiveBloomCubes {
   addCubes() {
     const tl = gsap.timeline();
     this.gltfLoader.load(
-      "https://Prismore.b-cdn.net/prismore5.glb",
-      // ".././public/prismore5.glb",
+      "https://abc-xyz.b-cdn.net/prismore/prismore5.glb",
       (gltf) => {
         const model = gltf.scene;
 
