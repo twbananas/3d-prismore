@@ -60,7 +60,7 @@ class SelectiveBloomCubes {
     const dracoLoader = new DRACOLoader();
     this.gltfLoader = new GLTFLoader();
     dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.6/");
-    // dracoLoader.setDecoderPath("https://abc-xyz.b-cdn.net/prismore/index-96witzP7.js");
+    // dracoLoader.setDecoderPath("https://Prismore.b-cdn.net/index-Bdpj-q_I.js");
     this.gltfLoader.setDRACOLoader(dracoLoader);
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
