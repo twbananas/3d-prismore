@@ -206,7 +206,7 @@ class SelectiveBloomCubes {
             });
           }
         });
-        // this.Tcontrol(this.gModel);
+        this.Tcontrol(this.gModel);
         gsap.to(this.gModel.position, { x: 0, y: 0, z: 0, duration: 0.1 });
         gsap.to(this.gModel.rotation, { x: 0.109, y: -0.05, z: 0.005 });
         tl.to(
