@@ -619,8 +619,8 @@ class SelectiveBloomCubes {
       </div>
       <div style="margin-bottom: 12px; display: flex; gap: 5px; flex-wrap: wrap;">
         <button id="btn-translate" style="padding: 8px 12px; background: #74A552; color: black; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Translate (W)</button>
-        <button id="btn-rotate" style="padding: 8px 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer;">Rotate (E)</button>
-        <button id="btn-scale" style="padding: 8px 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer;">Scale (R)</button>
+        <button id="btn-rotate" style="padding: 8px 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer;">Rotate (R)</button>
+        <button id="btn-scale" style="padding: 8px 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer;">Scale (S)</button>
       </div>
       <div style="margin-bottom: 12px;">
         <div style="margin-bottom: 8px; font-weight: bold;">Manual Controls:</div>
