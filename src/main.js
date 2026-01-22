@@ -455,6 +455,8 @@ class SelectiveBloomCubes {
   }
 
   // Animation loop
+  // ... (all your existing code above) ...
+
   animate() {
     requestAnimationFrame(this.animate.bind(this));
     this.controls.update();
@@ -480,8 +482,14 @@ class SelectiveBloomCubes {
     const gizmo = this.tcontrol.getHelper();
     this.scene.add(gizmo);
     this.tcontrol.attach(mesh);
-    // this.scene.add(control);
     this.tcontrol.setMode("translate");
+    
+    // Hide the 3D gizmo, we'll use manual controls instead
+    this.tcontrol.visible = false;
+    
+    // Create fixed UI controls overlay
+    this.createFixedControls(mesh);
+    
     this.tcontrol.addEventListener("change", (e) => {
       switch (this.tcontrol.mode) {
         case "translate":
@@ -510,14 +518,20 @@ class SelectiveBloomCubes {
 
     const self = this;
     window.addEventListener("keydown", function (event) {
-      console.log(event);
-
       if (event.key === " ") {
         self.orbitControls = !self.orbitControls;
-        self.dat_control.setValue(self.orbitControls);
+        if (self.dat_control) {
+          self.dat_control.setValue(self.orbitControls);
+        }
       }
-    });
-    window.addEventListener("keydown", function (event) {
+      
+      if (event.key === "h" || event.key === "H") {
+        const controlPanel = document.getElementById('transform-controls');
+        if (controlPanel) {
+          controlPanel.style.display = controlPanel.style.display === 'none' ? 'block' : 'none';
+        }
+      }
+      
       if (self.tcontrol) {
         switch (event.key) {
           case "q":
@@ -534,14 +548,17 @@ class SelectiveBloomCubes {
 
           case "w":
             self.tcontrol.setMode("translate");
+            self.updateControlsUI();
             break;
 
           case "e":
             self.tcontrol.setMode("rotate");
+            self.updateControlsUI();
             break;
 
           case "r":
             self.tcontrol.setMode("scale");
+            self.updateControlsUI();
             break;
 
           case "+":
@@ -573,7 +590,166 @@ class SelectiveBloomCubes {
       }
     });
   }
-}
+
+  createFixedControls(mesh) {
+    // Create control panel
+    const controlPanel = document.createElement('div');
+    controlPanel.id = 'transform-controls';
+    controlPanel.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid #74A552;
+      border-radius: 8px;
+      padding: 15px;
+      color: #74A552;
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 1000;
+      min-width: 250px;
+    `;
+
+    controlPanel.innerHTML = `
+      <div style="margin-bottom: 10px; font-weight: bold; border-bottom: 1px solid #74A552; padding-bottom: 5px;">
+        Transform Controls
+      </div>
+      <div style="margin-bottom: 8px;">
+        <strong>Mode:</strong> <span id="current-mode">Translate</span>
+      </div>
+      <div style="margin-bottom: 12px; display: flex; gap: 5px; flex-wrap: wrap;">
+        <button id="btn-translate" style="padding: 8px 12px; background: #74A552; color: black; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Translate (W)</button>
+        <button id="btn-rotate" style="padding: 8px 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer;">Rotate (E)</button>
+        <button id="btn-scale" style="padding: 8px 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer;">Scale (R)</button>
+      </div>
+      <div style="margin-bottom: 12px;">
+        <div style="margin-bottom: 8px; font-weight: bold;">Manual Controls:</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 8px;">
+          <button id="btn-x-pos" style="padding: 5px; background: #74A552; color: black; border: none; border-radius: 3px; cursor: pointer;">X+</button>
+          <button id="btn-y-pos" style="padding: 5px; background: #74A552; color: black; border: none; border-radius: 3px; cursor: pointer;">Y+</button>
+          <button id="btn-z-pos" style="padding: 5px; background: #74A552; color: black; border: none; border-radius: 3px; cursor: pointer;">Z+</button>
+          <button id="btn-x-neg" style="padding: 5px; background: #333; color: white; border: none; border-radius: 3px; cursor: pointer;">X-</button>
+          <button id="btn-y-neg" style="padding: 5px; background: #333; color: white; border: none; border-radius: 3px; cursor: pointer;">Y-</button>
+          <button id="btn-z-neg" style="padding: 5px; background: #333; color: white; border: none; border-radius: 3px; cursor: pointer;">Z-</button>
+        </div>
+        <div style="display: flex; gap: 5px;">
+          <input type="range" id="step-size" min="0.01" max="1" step="0.01" value="0.1" style="flex: 1;">
+          <span id="step-value" style="min-width: 40px;">0.1</span>
+        </div>
+      </div>
+      <div style="font-size: 10px; opacity: 0.7; margin-top: 10px; line-height: 1.4;">
+        Q - Toggle Space<br>
+        X/Y/Z - Toggle Axis<br>
+        +/- - Adjust Gizmo Size<br>
+        H - Hide/Show Panel<br>
+        ESC - Reset
+      </div>
+    `;
+
+    document.body.appendChild(controlPanel);
+
+    // Store the mesh reference
+    this.controlledMesh = mesh;
+    this.stepSize = 0.1;
+
+    // Add button click handlers
+    const self = this;
+    
+    // Step size control
+    document.getElementById('step-size').addEventListener('input', (e) => {
+      self.stepSize = parseFloat(e.target.value);
+      document.getElementById('step-value').textContent = self.stepSize.toFixed(2);
+    });
+
+    // Mode buttons
+    document.getElementById('btn-translate').addEventListener('click', () => {
+      self.tcontrol.setMode("translate");
+      self.updateControlsUI();
+    });
+    
+    document.getElementById('btn-rotate').addEventListener('click', () => {
+      self.tcontrol.setMode("rotate");
+      self.updateControlsUI();
+    });
+    
+    document.getElementById('btn-scale').addEventListener('click', () => {
+      self.tcontrol.setMode("scale");
+      self.updateControlsUI();
+    });
+
+    // Manual transform buttons
+    document.getElementById('btn-x-pos').addEventListener('click', () => self.manualTransform('x', 1));
+    document.getElementById('btn-x-neg').addEventListener('click', () => self.manualTransform('x', -1));
+    document.getElementById('btn-y-pos').addEventListener('click', () => self.manualTransform('y', 1));
+    document.getElementById('btn-y-neg').addEventListener('click', () => self.manualTransform('y', -1));
+    document.getElementById('btn-z-pos').addEventListener('click', () => self.manualTransform('z', 1));
+    document.getElementById('btn-z-neg').addEventListener('click', () => self.manualTransform('z', -1));
+  }
+
+  manualTransform(axis, direction) {
+    const mesh = this.controlledMesh;
+    if (!mesh) return;
+
+    const step = this.stepSize * direction;
+
+    switch (this.tcontrol.mode) {
+      case 'translate':
+        mesh.position[axis] += step;
+        console.log('Position:', {
+          x: parseFloat(mesh.position.x.toFixed(3)),
+          y: parseFloat(mesh.position.y.toFixed(3)),
+          z: parseFloat(mesh.position.z.toFixed(3)),
+        });
+        break;
+      case 'rotate':
+        mesh.rotation[axis] += step;
+        console.log('Rotation:', {
+          x: parseFloat(mesh.rotation.x.toFixed(3)),
+          y: parseFloat(mesh.rotation.y.toFixed(3)),
+          z: parseFloat(mesh.rotation.z.toFixed(3)),
+        });
+        break;
+      case 'scale':
+        mesh.scale[axis] += step;
+        console.log('Scale:', {
+          x: parseFloat(mesh.scale.x.toFixed(3)),
+          y: parseFloat(mesh.scale.y.toFixed(3)),
+          z: parseFloat(mesh.scale.z.toFixed(3)),
+        });
+        break;
+    }
+  }
+
+  updateControlsUI() {
+    const modeText = document.getElementById('current-mode');
+    const btnTranslate = document.getElementById('btn-translate');
+    const btnRotate = document.getElementById('btn-rotate');
+    const btnScale = document.getElementById('btn-scale');
+    
+    if (!modeText) return;
+    
+    // Reset all buttons
+    btnTranslate.style.background = '#555';
+    btnRotate.style.background = '#555';
+    btnScale.style.background = '#555';
+    
+    // Highlight active mode
+    switch (this.tcontrol.mode) {
+      case 'translate':
+        modeText.textContent = 'Translate';
+        btnTranslate.style.background = '#74A552';
+        break;
+      case 'rotate':
+        modeText.textContent = 'Rotate';
+        btnRotate.style.background = '#74A552';
+        break;
+      case 'scale':
+        modeText.textContent = 'Scale';
+        btnScale.style.background = '#74A552';
+        break;
+    }
+  }
+} // <-- This closes the SelectiveBloomCubes class
 
 // Start the app
 new SelectiveBloomCubes();
