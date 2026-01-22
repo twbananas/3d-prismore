@@ -457,8 +457,6 @@ class SelectiveBloomCubes {
   // Animation loop
   // ... (all your existing code above) ...
 
-  // ... (all your existing code above) ...
-
   animate() {
     requestAnimationFrame(this.animate.bind(this));
     this.controls.update();
@@ -486,16 +484,11 @@ class SelectiveBloomCubes {
     this.tcontrol.attach(mesh);
     this.tcontrol.setMode("translate");
     
-    // Show the 3D gizmo for visual feedback
-    this.tcontrol.visible = true;
+    // Hide the 3D gizmo, we'll use manual controls instead
+    this.tcontrol.visible = false;
     
     // Create fixed UI controls overlay
     this.createFixedControls(mesh);
-    
-    // When using transform controls, disable orbit controls
-    this.tcontrol.addEventListener('dragging-changed', (event) => {
-      this.controls.enabled = !event.value;
-    });
     
     this.tcontrol.addEventListener("change", (e) => {
       switch (this.tcontrol.mode) {
@@ -558,12 +551,12 @@ class SelectiveBloomCubes {
             self.updateControlsUI();
             break;
 
-          case "e":
+          case "r":
             self.tcontrol.setMode("rotate");
             self.updateControlsUI();
             break;
 
-          case "r":
+          case "s":
             self.tcontrol.setMode("scale");
             self.updateControlsUI();
             break;
@@ -606,7 +599,7 @@ class SelectiveBloomCubes {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 0.8);
       border: 1px solid #74A552;
       border-radius: 8px;
       padding: 15px;
@@ -614,33 +607,42 @@ class SelectiveBloomCubes {
       font-family: monospace;
       font-size: 12px;
       z-index: 1000;
-      min-width: 200px;
+      min-width: 250px;
     `;
 
     controlPanel.innerHTML = `
       <div style="margin-bottom: 10px; font-weight: bold; border-bottom: 1px solid #74A552; padding-bottom: 5px;">
         Transform Controls
       </div>
+      <div style="margin-bottom: 8px;">
+        <strong>Mode:</strong> <span id="current-mode">Translate</span>
+      </div>
+      <div style="margin-bottom: 12px; display: flex; gap: 5px; flex-wrap: wrap;">
+        <button id="btn-translate" style="padding: 8px 12px; background: #74A552; color: black; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Translate (W)</button>
+        <button id="btn-rotate" style="padding: 8px 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer;">Rotate (E)</button>
+        <button id="btn-scale" style="padding: 8px 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer;">Scale (R)</button>
+      </div>
       <div style="margin-bottom: 12px;">
-        <div style="margin-bottom: 8px; padding: 5px; background: rgba(116, 165, 82, 0.2); border-radius: 4px;">
-          <strong>Mode:</strong> <span id="current-mode">Translate</span>
+        <div style="margin-bottom: 8px; font-weight: bold;">Manual Controls:</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 8px;">
+          <button id="btn-x-pos" style="padding: 5px; background: #74A552; color: black; border: none; border-radius: 3px; cursor: pointer;">X+</button>
+          <button id="btn-y-pos" style="padding: 5px; background: #74A552; color: black; border: none; border-radius: 3px; cursor: pointer;">Y+</button>
+          <button id="btn-z-pos" style="padding: 5px; background: #74A552; color: black; border: none; border-radius: 3px; cursor: pointer;">Z+</button>
+          <button id="btn-x-neg" style="padding: 5px; background: #333; color: white; border: none; border-radius: 3px; cursor: pointer;">X-</button>
+          <button id="btn-y-neg" style="padding: 5px; background: #333; color: white; border: none; border-radius: 3px; cursor: pointer;">Y-</button>
+          <button id="btn-z-neg" style="padding: 5px; background: #333; color: white; border: none; border-radius: 3px; cursor: pointer;">Z-</button>
+        </div>
+        <div style="display: flex; gap: 5px;">
+          <input type="range" id="step-size" min="0.01" max="1" step="0.01" value="0.1" style="flex: 1;">
+          <span id="step-value" style="min-width: 40px;">0.1</span>
         </div>
       </div>
-      <div style="margin-bottom: 12px; display: flex; gap: 5px; flex-direction: column;">
-        <button id="btn-translate" style="padding: 10px; background: #74A552; color: black; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">G - Move</button>
-        <button id="btn-rotate" style="padding: 10px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer;">R - Rotate</button>
-        <button id="btn-scale" style="padding: 10px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer;">S - Scale</button>
-      </div>
-      <div style="font-size: 10px; opacity: 0.7; line-height: 1.6; border-top: 1px solid #74A552; padding-top: 10px;">
-        <strong>Blender-style shortcuts:</strong><br>
-        <span style="color: #74A552;">G</span> - Grab/Move<br>
-        <span style="color: #74A552;">R</span> - Rotate<br>
-        <span style="color: #74A552;">S</span> - Scale<br>
-        <span style="color: #74A552;">X/Y/Z</span> - Constrain to axis<br>
-        <span style="color: #74A552;">Shift+X/Y/Z</span> - Exclude axis<br>
-        <span style="color: #74A552;">Tab</span> - Toggle space (local/world)<br>
-        <span style="color: #74A552;">H</span> - Hide/Show this panel<br>
-        <span style="color: #74A552;">Esc</span> - Cancel
+      <div style="font-size: 10px; opacity: 0.7; margin-top: 10px; line-height: 1.4;">
+        Q - Toggle Space<br>
+        X/Y/Z - Toggle Axis<br>
+        +/- - Adjust Gizmo Size<br>
+        H - Hide/Show Panel<br>
+        ESC - Reset
       </div>
     `;
 
@@ -648,10 +650,17 @@ class SelectiveBloomCubes {
 
     // Store the mesh reference
     this.controlledMesh = mesh;
+    this.stepSize = 0.1;
 
     // Add button click handlers
     const self = this;
     
+    // Step size control
+    document.getElementById('step-size').addEventListener('input', (e) => {
+      self.stepSize = parseFloat(e.target.value);
+      document.getElementById('step-value').textContent = self.stepSize.toFixed(2);
+    });
+
     // Mode buttons
     document.getElementById('btn-translate').addEventListener('click', () => {
       self.tcontrol.setMode("translate");
@@ -667,6 +676,48 @@ class SelectiveBloomCubes {
       self.tcontrol.setMode("scale");
       self.updateControlsUI();
     });
+
+    // Manual transform buttons
+    document.getElementById('btn-x-pos').addEventListener('click', () => self.manualTransform('x', 1));
+    document.getElementById('btn-x-neg').addEventListener('click', () => self.manualTransform('x', -1));
+    document.getElementById('btn-y-pos').addEventListener('click', () => self.manualTransform('y', 1));
+    document.getElementById('btn-y-neg').addEventListener('click', () => self.manualTransform('y', -1));
+    document.getElementById('btn-z-pos').addEventListener('click', () => self.manualTransform('z', 1));
+    document.getElementById('btn-z-neg').addEventListener('click', () => self.manualTransform('z', -1));
+  }
+
+  manualTransform(axis, direction) {
+    const mesh = this.controlledMesh;
+    if (!mesh) return;
+
+    const step = this.stepSize * direction;
+
+    switch (this.tcontrol.mode) {
+      case 'translate':
+        mesh.position[axis] += step;
+        console.log('Position:', {
+          x: parseFloat(mesh.position.x.toFixed(3)),
+          y: parseFloat(mesh.position.y.toFixed(3)),
+          z: parseFloat(mesh.position.z.toFixed(3)),
+        });
+        break;
+      case 'rotate':
+        mesh.rotation[axis] += step;
+        console.log('Rotation:', {
+          x: parseFloat(mesh.rotation.x.toFixed(3)),
+          y: parseFloat(mesh.rotation.y.toFixed(3)),
+          z: parseFloat(mesh.rotation.z.toFixed(3)),
+        });
+        break;
+      case 'scale':
+        mesh.scale[axis] += step;
+        console.log('Scale:', {
+          x: parseFloat(mesh.scale.x.toFixed(3)),
+          y: parseFloat(mesh.scale.y.toFixed(3)),
+          z: parseFloat(mesh.scale.z.toFixed(3)),
+        });
+        break;
+    }
   }
 
   updateControlsUI() {
@@ -679,28 +730,22 @@ class SelectiveBloomCubes {
     
     // Reset all buttons
     btnTranslate.style.background = '#555';
-    btnTranslate.style.color = 'white';
     btnRotate.style.background = '#555';
-    btnRotate.style.color = 'white';
     btnScale.style.background = '#555';
-    btnScale.style.color = 'white';
     
     // Highlight active mode
     switch (this.tcontrol.mode) {
       case 'translate':
-        modeText.textContent = 'Move (G)';
+        modeText.textContent = 'Translate';
         btnTranslate.style.background = '#74A552';
-        btnTranslate.style.color = 'black';
         break;
       case 'rotate':
-        modeText.textContent = 'Rotate (R)';
+        modeText.textContent = 'Rotate';
         btnRotate.style.background = '#74A552';
-        btnRotate.style.color = 'black';
         break;
       case 'scale':
-        modeText.textContent = 'Scale (S)';
+        modeText.textContent = 'Scale';
         btnScale.style.background = '#74A552';
-        btnScale.style.color = 'black';
         break;
     }
   }
